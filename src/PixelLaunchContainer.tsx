@@ -21,6 +21,8 @@ export interface PixelLaunchContainerProps {
   onDismissed?: () => void;
   /** Background colour of the overlay. Defaults to "#FFFFFF". */
   backgroundColor?: string;
+  /** zIndex of the overlay. Defaults to 10010 (renders above DomeFooter). */
+  zIndex?: number;
   children: React.ReactNode;
 }
 
@@ -43,6 +45,7 @@ export function PixelLaunchContainer({
   onClose: _onClose,
   onDismissed,
   backgroundColor = "#FFFFFF",
+  zIndex = 200,
   children,
 }: PixelLaunchContainerProps) {
   const progress   = useRef(new Animated.Value(0)).current;
@@ -128,7 +131,7 @@ export function PixelLaunchContainer({
 
   return (
     <Animated.View
-      style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, { zIndex: 200, elevation: 200, opacity }]}
+      style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, { zIndex, elevation: zIndex, opacity }]}
     >
       <Animated.View
         style={{ flex: 1, transform: [{ translateX }, { translateY }, { scale }] }}

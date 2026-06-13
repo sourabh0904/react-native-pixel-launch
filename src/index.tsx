@@ -34,3 +34,14 @@ export {
   type FabMenuProps,
   type FabMenuItem,
 } from "./DomeFooter";
+
+// ─── Pixel Menu Grid + Overlay ──────────────────────────────────────────────
+export {
+  PixelMenuGrid,
+  PixelMenuOverlay,
+  type PixelMenuItem,
+  type PixelMenuSection,
+  type PixelMenuIconRenderer,
+  type PixelMenuGridProps,
+  type PixelMenuOverlayProps,
+} from "./PixelMenuGrid";

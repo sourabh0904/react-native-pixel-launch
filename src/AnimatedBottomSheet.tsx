@@ -1,10 +1,10 @@
 /**
  * AnimatedBottomSheet
  *
- * Reusable bottom sheet that expands from a given origin point (Pixel-Launcher
- * style) and collapses back into it on close.
+ * Reusable bottom sheet that slides up from the bottom with a pixel-style
+ * spring animation and collapses back on close.
  *
- * Also provides StaggerContext so any <StaggerItem index={i}> inside will
+ * Provides StaggerContext so any <StaggerItem index={i}> inside will
  * animate in one-by-one when the sheet opens, and out in reverse when it closes.
  */
 
@@ -76,6 +76,16 @@ export type AnimatedBottomSheetProps = {
   originX?:      number;
   /** Max sheet height as fraction of screen height (default 0.80) */
   maxHeightRatio?: number;
+  /** Sheet background color. Defaults to "#FFFFFF". */
+  backgroundColor?: string;
+  /** Title text color. Defaults to "#111827". */
+  titleColor?: string;
+  /** Handle bar color. Defaults to "#E5E7EB". */
+  handleColor?: string;
+  /** Divider color. Defaults to "#F3F4F6". */
+  dividerColor?: string;
+  /** Backdrop opacity when fully open. Defaults to 0.45. */
+  backdropMaxOpacity?: number;
   children?:     React.ReactNode;
 };
 
@@ -84,19 +94,21 @@ export function AnimatedBottomSheet({
   onClose,
   title,
   bottomOffset    = 0,
-  originX,
+  originX: _originX,
   maxHeightRatio  = 0.80,
+  backgroundColor = "#FFFFFF",
+  titleColor      = "#111827",
+  handleColor     = "#E5E7EB",
+  dividerColor    = "#F3F4F6",
+  backdropMaxOpacity = 0.45,
   children,
 }: AnimatedBottomSheetProps) {
   const MAX_HEIGHT = SCREEN_H * maxHeightRatio;
 
-  const OX = (originX ?? SCREEN_W / 2) - SCREEN_W / 2;
-  const OY = SCREEN_H * 0.32;
-
   const [isVisible, setIsVisible] = useState(false);
   const prevVisible               = useRef(false);
 
-  const scaleAnim       = useRef(new Animated.Value(0)).current;
+  const slideAnim       = useRef(new Animated.Value(SCREEN_H)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const panY            = useRef(new Animated.Value(0)).current;
 
@@ -124,19 +136,19 @@ export function AnimatedBottomSheet({
   };
 
   const openSheet = () => {
-    scaleAnim.setValue(0);
+    slideAnim.setValue(SCREEN_H);
     panY.setValue(0);
     backdropOpacity.setValue(0);
     setIsVisible(true);
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue:    1,
+      Animated.spring(slideAnim, {
+        toValue:    0,
         bounciness: 6,
         speed:      10,
         useNativeDriver: true,
       }),
       Animated.timing(backdropOpacity, {
-        toValue:  0.45,
+        toValue:  backdropMaxOpacity,
         duration: 280,
         useNativeDriver: true,
       }),
@@ -146,8 +158,8 @@ export function AnimatedBottomSheet({
 
   const closeSheet = () => {
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue:    0,
+      Animated.spring(slideAnim, {
+        toValue:    SCREEN_H,
         bounciness: 0,
         speed:      18,
         useNativeDriver: true,
@@ -166,8 +178,8 @@ export function AnimatedBottomSheet({
   const closeFromGesture = () => {
     prevVisible.current = false;
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue:    0,
+      Animated.spring(slideAnim, {
+        toValue:    SCREEN_H,
         bounciness: 0,
         speed:      20,
         useNativeDriver: true,
@@ -226,78 +238,87 @@ export function AnimatedBottomSheet({
 
   if (!isVisible) return null;
 
-  const sheetTransform = [
-    { translateX:  OX },
-    { translateY:  OY },
-    { scale: scaleAnim },
-    { translateX: -OX },
-    { translateY: -OY },
-    { translateY: panY },
-  ];
+  // Combine slide + drag into one translateY
+  const combinedTranslateY = Animated.add(slideAnim, panY);
 
   return (
     <StaggerContext.Provider value={rowAnims}>
-      <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
-        <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
-      </Animated.View>
+      <View style={styles.container} pointerEvents="box-none">
+        {/* Backdrop */}
+        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
+        </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.sheet,
-          { bottom: bottomOffset, maxHeight: MAX_HEIGHT, transform: sheetTransform },
-        ]}
-      >
-        <View {...panResponder.panHandlers}>
-          <View style={styles.handle} />
-          {title ? (
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>{title}</Text>
-            </View>
-          ) : null}
-        </View>
-
-        <View style={styles.divider} />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+        {/* Sheet */}
+        <Animated.View
+          style={[
+            styles.sheet,
+            {
+              bottom: bottomOffset,
+              maxHeight: MAX_HEIGHT,
+              backgroundColor,
+              transform: [{ translateY: combinedTranslateY }],
+            },
+          ]}
         >
-          {children}
-        </ScrollView>
-      </Animated.View>
+          <View {...panResponder.panHandlers}>
+            <View style={[styles.handle, { backgroundColor: handleColor }]} />
+            {title ? (
+              <View style={styles.header}>
+                <Text style={[styles.headerTitle, { color: titleColor }]}>{title}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: dividerColor }]} />
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
+        </Animated.View>
+      </View>
     </StaggerContext.Provider>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 500,
+    elevation: 500,
+  },
   backdrop: {
     position: "absolute",
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "#000",
-    zIndex: 10000,
-    elevation: 10000,
   },
   sheet: {
     position: "absolute",
     left: 0,
     right: 0,
-    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    zIndex: 10001,
-    elevation: 10001,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    overflow: "hidden",
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 16,
   },
   handle: {
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E5E7EB",
     alignSelf: "center",
     marginTop: 12,
     marginBottom: 4,
@@ -310,12 +331,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
     textAlign: "center",
   },
   divider: {
     height: 1,
-    backgroundColor: "#F3F4F6",
     marginHorizontal: 20,
   },
   scrollContent: {
