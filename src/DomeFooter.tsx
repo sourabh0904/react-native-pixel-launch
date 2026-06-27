@@ -15,42 +15,52 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
-const { width: SCREEN_W } = Dimensions.get("window");
+const { width: INITIAL_SCREEN_W } = Dimensions.get("window");
 
 // ─── Layout constants (exported so screens can compute offsets / origins) ─────
 
 export const FOOTER_BAR_H = 56;
 export const DOME_R       = 50;
-export const DOME_CX      = SCREEN_W - 58;
+export const DOME_CX      = INITIAL_SCREEN_W - 58; // initial value kept for backward-compat
 export const BTN_R        = 30;
 export const CUP_RIM_R    = BTN_R + 9;
 
 // ─── Internal SVG background ──────────────────────────────────────────────────
 
-function FooterSvgBg({ extraH, footerColor }: { extraH: number; footerColor: string }) {
-  const barH = FOOTER_BAR_H + extraH;
+function FooterSvgBg({
+  extraH,
+  footerColor,
+  screenW,
+}: {
+  extraH: number;
+  footerColor: string;
+  screenW: number;
+}) {
+  const barH   = FOOTER_BAR_H + extraH;
+  const domeCx = screenW - 58;
 
   const rect = [
     `M 0 0`,
-    `L ${SCREEN_W} 0`,
-    `L ${SCREEN_W} ${barH}`,
+    `L ${screenW} 0`,
+    `L ${screenW} ${barH}`,
     `L 0 ${barH}`,
     `Z`,
   ].join(" ");
 
   const circle = [
-    `M ${DOME_CX + CUP_RIM_R} 0`,
-    `A ${CUP_RIM_R} ${CUP_RIM_R} 0 1 0 ${DOME_CX - CUP_RIM_R} 0`,
-    `A ${CUP_RIM_R} ${CUP_RIM_R} 0 1 0 ${DOME_CX + CUP_RIM_R} 0`,
+    `M ${domeCx + CUP_RIM_R} 0`,
+    `A ${CUP_RIM_R} ${CUP_RIM_R} 0 1 0 ${domeCx - CUP_RIM_R} 0`,
+    `A ${CUP_RIM_R} ${CUP_RIM_R} 0 1 0 ${domeCx + CUP_RIM_R} 0`,
     `Z`,
   ].join(" ");
 
   return (
     <Svg
-      width={SCREEN_W}
+      width={screenW}
       height={barH}
       style={{ position: "absolute", bottom: 0, left: 0, backgroundColor: "transparent" }}
     >
@@ -246,6 +256,12 @@ export function DomeFooter({
   onCloseMenu,
   renderIcon,
 }: DomeFooterProps) {
+  // useWindowDimensions re-renders on rotation and tablet resize,
+  // keeping the SVG width and FAB position in sync with the actual screen.
+  const { width: screenW } = useWindowDimensions();
+  const domeCx   = screenW - 58;
+  const fabRight = screenW - domeCx - BTN_R; // always 28px from right edge
+
   const isOverlayOpen = isSheetOpen || isFabOpen || isMenuOpen;
 
   function handlePress() {
@@ -266,10 +282,10 @@ export function DomeFooter({
         elevation: 9999,
       }}
     >
-      <FooterSvgBg extraH={barH - FOOTER_BAR_H} footerColor={footerColor} />
+      <FooterSvgBg extraH={barH - FOOTER_BAR_H} footerColor={footerColor} screenW={screenW} />
       <TouchableOpacity
         activeOpacity={0.85}
-        style={[styles.footerMenuBtn, { backgroundColor: primaryColor }]}
+        style={[styles.footerMenuBtn, { backgroundColor: primaryColor, right: fabRight }]}
         onPress={handlePress}
       >
         {renderIcon ? renderIcon(iconName) : (
@@ -294,7 +310,7 @@ export function DomeFooter({
 const styles = StyleSheet.create({
   fabItem: {
     position: "absolute",
-    right: SCREEN_W - DOME_CX - BTN_R,
+    right: 28, // dome is always 58px from right edge, FAB radius 30 → 58 - 30 = 28
     flexDirection: "row",
     alignItems: "center",
     zIndex: 31,
@@ -332,7 +348,7 @@ const styles = StyleSheet.create({
   footerMenuBtn: {
     position: "absolute",
     top: 0,
-    right: SCREEN_W - DOME_CX - BTN_R,
+    // right is set inline using live screenW so it updates on rotation/tablet resize
     width: BTN_R * 2,
     height: BTN_R * 2,
     borderRadius: BTN_R,
