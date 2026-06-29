@@ -31,8 +31,10 @@ export type PixelDialogButton = {
   label: string;
   /** "default" = primary blue  |  "cancel" = gray  |  "destructive" = red */
   style?: "default" | "cancel" | "destructive";
+  /** Custom text color — overrides style */
   color?: string;
-  icon?: React.ReactNode;
+  /** Icon render function — receives resolved color (from style or custom color) */
+  icon?: (color: string) => React.ReactNode;
   onPress: () => void;
 };
 
@@ -127,13 +129,15 @@ export function PixelDialog({
   const makePressOut = (i: number) => () =>
     Animated.spring(btnScales[i], { toValue: 1,    tension: 380, friction: 22, useNativeDriver: true }).start();
 
-  const btnTextStyle = (btn:PixelDialogButton) => {
-    // if (style === "destructive") return [styles.btnText, styles.btnDestructive];
-    // if (style === "cancel")      return [styles.btnText, styles.btnCancel];
-    if(btn.color) return [styles.btnText , {color: btn.color}];
-    if(btn.style === 'destructive') return [styles.btnText, styles.btnDestructive];
-    if(btn.style === 'cancel') return [styles.btnText, styles.btnCancel];
-    return [styles.btnText, styles.btnDefault];
+  const resolveColor = (btn: PixelDialogButton): string => {
+    if (btn.color) return btn.color;
+    if (btn.style === "destructive") return "#EF4444";
+    if (btn.style === "cancel") return "#6B7280";
+    return "#2563EB";
+  };
+
+  const btnTextStyle = (btn: PixelDialogButton) => {
+    return [styles.btnText, { color: resolveColor(btn) }];
   };
 
   return (
@@ -177,9 +181,8 @@ export function PixelDialog({
                     onPressOut={makePressOut(i)}
                     onPress={btn.onPress}
                   >
-                    {/* <Text style={btnTextStyle(btn)}>{btn.label}</Text> */}
-                    <View style={{ flexDirection: 'row' , alignItems: 'center', gap : 6}}>
-                      {btn.icon}
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      {btn.icon?.(resolveColor(btn))}
                       <Text style={btnTextStyle(btn)}>{btn.label}</Text>
                     </View>
                   </TouchableOpacity>
