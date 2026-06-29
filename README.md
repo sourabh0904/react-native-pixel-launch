@@ -120,6 +120,20 @@ import { PixelDialog } from "react-native-pixel-launch";
   ]}
   onDismiss={() => setShowDialog(false)}
 />
+
+{/* Custom button colors */}
+<PixelDialog
+  visible={showContact}
+  origin={contactOrigin}
+  title="Contact"
+  message="How would you like to reach out?"
+  buttons={[
+    { label: "Call", style: "default", onPress: handleCall },
+    { label: "WhatsApp", color: "#25D366", onPress: handleWhatsApp },
+    { label: "Cancel", style: "cancel", onPress: () => setShowContact(false) },
+  ]}
+  onDismiss={() => setShowContact(false)}
+/>
 ```
 
 #### Props
@@ -140,6 +154,7 @@ import { PixelDialog } from "react-native-pixel-launch";
 type PixelDialogButton = {
   label: string;
   style?: "default" | "cancel" | "destructive";
+  color?: string;  // Custom text color — overrides style
   onPress: () => void;
 };
 ```
@@ -430,8 +445,11 @@ type FabMenuItem = {
 
 You can extend or override these with the `namedColors` prop.
 
+## Changelog
+
+### v1.1.1
+- **PixelDialog**: Added optional `color` prop to `PixelDialogButton` for custom button text colors. Overrides the `style` preset when provided.
+
 ## License
 
 MIT — made by [Sourabh Patidar](https://github.com/Saurabh0904)
-# refresh
-# refresh

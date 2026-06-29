@@ -31,6 +31,7 @@ export type PixelDialogButton = {
   label: string;
   /** "default" = primary blue  |  "cancel" = gray  |  "destructive" = red */
   style?: "default" | "cancel" | "destructive";
+  color?: string;
   onPress: () => void;
 };
 
@@ -125,9 +126,12 @@ export function PixelDialog({
   const makePressOut = (i: number) => () =>
     Animated.spring(btnScales[i], { toValue: 1,    tension: 380, friction: 22, useNativeDriver: true }).start();
 
-  const btnTextStyle = (style?: PixelDialogButton["style"]) => {
-    if (style === "destructive") return [styles.btnText, styles.btnDestructive];
-    if (style === "cancel")      return [styles.btnText, styles.btnCancel];
+  const btnTextStyle = (btn:PixelDialogButton) => {
+    // if (style === "destructive") return [styles.btnText, styles.btnDestructive];
+    // if (style === "cancel")      return [styles.btnText, styles.btnCancel];
+    if(btn.color) return [styles.btnText , {color: btn.color}];
+    if(btn.style === 'destructive') return [styles.btnText, styles.btnDestructive];
+    if(btn.style === 'cancel') return [styles.btnText, styles.btnCancel];
     return [styles.btnText, styles.btnDefault];
   };
 
@@ -172,7 +176,7 @@ export function PixelDialog({
                     onPressOut={makePressOut(i)}
                     onPress={btn.onPress}
                   >
-                    <Text style={btnTextStyle(btn.style)}>{btn.label}</Text>
+                    <Text style={btnTextStyle(btn)}>{btn.label}</Text>
                   </TouchableOpacity>
                 </Animated.View>
               </React.Fragment>
