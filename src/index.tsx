@@ -12,6 +12,13 @@ export {
   type PixelDialogProps,
 } from "./PixelDialog";
 
+// ─── Pixel Contact Dialog ───────────────────────────────────────────────────
+export {
+  PixelContactDialog,
+  type PixelContactDialogProps,
+  type ContactAction,
+} from "./PixelContactDialog";
+
 // ─── Animated Bottom Sheet ───────────────────────────────────────────────────
 export {
   AnimatedBottomSheet,

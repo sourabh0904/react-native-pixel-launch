@@ -12,6 +12,7 @@ Pixel Launcher-style animations for React Native and Expo — overlay transition
 
 - **PixelLaunchContainer** — Full-screen overlay that scales from any element (like Android's Pixel Launcher app-open animation)
 - **PixelDialog** — Custom alert dialog that expands from an origin point to screen center
+- **PixelContactDialog** — Pre-built Call/WhatsApp/SMS/Email dialog with zero icon dependencies
 - **AnimatedBottomSheet** — Bottom sheet with slide animation + stagger items
 - **DomeFooter** — SVG dome bar footer with circular FAB button cutout
 - **FabMenu** — Expandable floating action button menu with staggered spring animations
@@ -154,14 +155,66 @@ import { PixelDialog } from "react-native-pixel-launch";
 type PixelDialogButton = {
   label: string;
   style?: "default" | "cancel" | "destructive";
-  color?: string;  // Custom text color — overrides style
+  color?: string;   // Custom text color — overrides style
+  icon?: (color: string) => React.ReactNode;  // Icon with auto-matched color
   onPress: () => void;
 };
 ```
 
 ---
 
-### 3. AnimatedBottomSheet
+### 3. PixelContactDialog
+
+Pre-built contact dialog with Call, WhatsApp, SMS, and Email — wraps `PixelDialog` with zero config. No icon dependency — bring your own icon library.
+
+```tsx
+import { PixelContactDialog } from "react-native-pixel-launch";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+
+<PixelContactDialog
+  visible={showContact}
+  origin={contactOrigin}
+  phone="8461033880"
+  actions={["call", "whatsapp"]}
+  renderIcon={(action, color) => (
+    <MaterialCommunityIcons
+      name={action === "call" ? "phone" : "whatsapp"}
+      size={16}
+      color={color}
+    />
+  )}
+  onDismiss={() => setShowContact(false)}
+/>
+```
+
+#### Props
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `visible` | `boolean` | Yes | -- | Controls visibility |
+| `origin` | `LaunchOrigin \| null` | Yes | -- | Origin rect of trigger element |
+| `phone` | `string` | No | -- | Phone number for call/whatsapp/sms |
+| `email` | `string` | No | -- | Email address for email action |
+| `countryCode` | `string` | No | `"91"` | Country code for WhatsApp |
+| `actions` | `ContactAction[]` | No | Auto-detected | Actions to show: `"call"`, `"whatsapp"`, `"sms"`, `"email"` |
+| `title` | `string` | No | Phone/email | Dialog title |
+| `message` | `string` | No | `"Choose an option"` | Body text |
+| `icon` | `ReactNode` | No | -- | Icon above the title |
+| `renderIcon` | `(action, color) => ReactNode` | No | -- | Render icon per button — receives resolved color |
+| `onDismiss` | `() => void` | Yes | -- | Close callback |
+
+#### Default Action Colors
+
+| Action | Label | Color |
+|--------|-------|-------|
+| `call` | Call | `#2563EB` (blue) |
+| `whatsapp` | WhatsApp | `#25D366` (green) |
+| `sms` | SMS | `#F59E0B` (amber) |
+| `email` | Email | `#EA4335` (red) |
+
+---
+
+### 4. AnimatedBottomSheet
 
 Bottom sheet with slide-up animation, drag-to-dismiss, and stagger items.
 
@@ -200,7 +253,7 @@ import { AnimatedBottomSheet, StaggerItem } from "react-native-pixel-launch";
 
 ---
 
-### 4. DomeFooter
+### 5. DomeFooter
 
 SVG dome bar footer with circular cutout for a floating action button.
 
@@ -253,7 +306,7 @@ function MyFooter() {
 
 ---
 
-### 5. FabMenu
+### 6. FabMenu
 
 Expandable floating action button menu with staggered spring animations.
 
@@ -294,7 +347,7 @@ import { FabMenu } from "react-native-pixel-launch";
 
 ---
 
-### 6. PixelMenuGrid
+### 7. PixelMenuGrid
 
 Data-driven, categorized icon grid with scale-on-press animation and LaunchOrigin measurement.
 
@@ -341,7 +394,7 @@ const items: MyItem[] = [
 
 ---
 
-### 7. PixelMenuOverlay
+### 8. PixelMenuOverlay
 
 Search bar + categorized menu grid combo. Manages search state internally.
 
@@ -446,6 +499,10 @@ type FabMenuItem = {
 You can extend or override these with the `namedColors` prop.
 
 ## Changelog
+
+### v1.2.0
+- **New: PixelContactDialog** — Pre-built contact dialog with Call, WhatsApp, SMS, Email actions. Zero icon dependencies — bring your own via `renderIcon`.
+- **PixelDialog**: Added `icon` render function on buttons — receives resolved color so icon and text always match.
 
 ### v1.1.1
 - **PixelDialog**: Added optional `color` prop to `PixelDialogButton` for custom button text colors. Overrides the `style` preset when provided.
