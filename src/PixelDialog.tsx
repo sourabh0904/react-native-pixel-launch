@@ -32,6 +32,7 @@ export type PixelDialogButton = {
   /** "default" = primary blue  |  "cancel" = gray  |  "destructive" = red */
   style?: "default" | "cancel" | "destructive";
   color?: string;
+  icon?: React.ReactNode;
   onPress: () => void;
 };
 
@@ -176,7 +177,11 @@ export function PixelDialog({
                     onPressOut={makePressOut(i)}
                     onPress={btn.onPress}
                   >
-                    <Text style={btnTextStyle(btn)}>{btn.label}</Text>
+                    {/* <Text style={btnTextStyle(btn)}>{btn.label}</Text> */}
+                    <View style={{ flexDirection: 'row' , alignItems: 'center', gap : 6}}>
+                      {btn.icon}
+                      <Text style={btnTextStyle(btn)}>{btn.label}</Text>
+                    </View>
                   </TouchableOpacity>
                 </Animated.View>
               </React.Fragment>
